@@ -1,0 +1,68 @@
+## Output descriptions:
+##
+
+{% if td_agent_include|default(false) %}
+   include conf.d/*.conf
+{% endif %}
+
+{% if td_agent_api_key|default(None) != None %}
+# Treasure Data (http://www.treasure-data.com/) provides cloud based data
+# analytics platform, which easily stores and processes data from td-agent.
+# FREE plan is also provided.
+# @see http://docs.fluentd.org/articles/http-to-td
+#
+# This section matches events whose tag is td.DATABASE.TABLE
+<match td.*.*>
+  type tdlog
+  apikey {{ td_agent_api_key }}
+
+  auto_create_table
+  buffer_type file
+  buffer_path /var/log/td-agent/buffer/td
+</match>
+{% endif %}
+
+{% if td_agent_debug|default(false) %}
+## match tag=debug.** and dump to console
+<match debug.**>
+  type stdout
+</match>
+{% endif %}
+
+<source>
+  type forward
+</source>
+
+{{ td_agent_conf }}
+
+{% if td_agent_s3|default(None) != None %}
+<match {{ td_agent_s3.pattern|default('s3.*') }}>
+    type s3
+    aws_key_id {{ td_agent_s3.aws_key_id }}
+    aws_sec_key {{ td_agent_s3.aws_sec_key }}
+    s3_bucket {{ td_agent_s3.bucket }}
+    s3_endpoint s3-{{ td_agent_s3.region|default('us-east-1') }}.amazonaws.com
+    s3_object_key_format {% if td_agent_s3.object_key_format|default(None) != None %}{{ td_agent_s3.object_key_format }}{% else %}{{ td_agent_s3.prefix|default('') }}%{hostname}-%{time_slice}_%{index}.%{file_extension}'{% endif %}
+
+    buffer_path {{ td_agent_s3.buffer_path|default('/var/tmp/fluent/s3') }}
+    time_slice_format {{ td_agent_s3.time_slice_format|default('%Y%m%d-%H') }}
+    time_slice_wait {{ td_agent_s3.time_slice_wait|default('10m') }}
+    utc true
+</match>
+{% endif %}
+
+{% if td_agent_http|default(false) %}
+<source>
+  type http
+  port {{ td_agent_http_port|default(8888) }}
+</source>
+{% endif %}
+
+{% if td_agent_debug|default(false) %}
+## live debugging agent
+<source>
+  type debug_agent
+  bind 127.0.0.1
+  port {{ td_agent_debug_port|default(24230) }}
+</source>
+{% endif %}
