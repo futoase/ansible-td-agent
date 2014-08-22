@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  author: Toshiya Kawasaki
+  author: Toshiya Kawasaki, Martin Heidegger
   description: Install td-agent, the distribution of fluentd.
   license: BSD
   min_ansible_version: 1.4

@@ -5,15 +5,8 @@
   with_items:
     - python-pycurl
 
-- name: Add apt repository
-  apt_repository: repo='deb http://packages.treasure-data.com/precise/ precise contrib' state=present
-  when: ansible_distribution_version == '12.04'
-
-- name: Add apt repository
-  apt_repository: repo='deb http://packages.treasure-data.com/debian/ lucid contrib' state=present
-  when: ansible_distribution_version == '10.04'
-
-- name: apt-get td-agent
-  apt: name=td-agent update_cache=yes force=yes
+- name: installing the td-agent
+  shell: curl -L http://toolbelt.treasuredata.com/sh/install-ubuntu-precise.sh | sh
+  when: tdAgentPath.stdout == "~none~"
   notify:
     - restart td-agent
